@@ -1,0 +1,21 @@
+{
+    "name": "researchsquare/exposure",
+    "description": "Selectively expose new features to a subset of your users.",
+    "homepage": "http://github.com/researchsquare/exposure",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=5.3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Exposure\\": "src/"
+        },
+        "classmap": [
+            "./src/AB2_Selector_HashRandomizer.php"
+        ]
+    }
+}
