@@ -1,12 +1,11 @@
 <?php
 
-namespace Exposure;
+namespace Exposure\Specification;
 
 use AB2_Selector_HashRandomizer;
-use Alsar;
+use Exposure\Context;
 
-class IsEnabledByPercentage extends Alsar\Specification\CompositeSpecification
-    implements FeatureSpecification
+class IsEnabledByPercentage extends CompositeSpecification
 {
     protected $percentage;
 
@@ -15,9 +14,12 @@ class IsEnabledByPercentage extends Alsar\Specification\CompositeSpecification
         $this->percentage = $percentage;
     }
 
-    public function isSatisfiedBy($candidate)
+    /**
+     * {@inheritdoc}
+     */
+    public function isSatisfiedBy($name, Context $context)
     {
-        if (is_null($candidate->context()->bucketingIdentity())) {
+        if (is_null($context->bucketingIdentity())) {
             return false;
         }
 
@@ -26,9 +28,9 @@ class IsEnabledByPercentage extends Alsar\Specification\CompositeSpecification
 
         // Prime the randomizer with the feature's name to ensure that a single
         // user does not have every feature enabled or disabled at once.
-        $randomizer = new AB2_Selector_HashRandomizer($candidate->name());
+        $randomizer = new AB2_Selector_HashRandomizer($name);
 
-        $n = $randomizer->randomize($candidate->context()->bucketingIdentity()) * 100;
+        $n = $randomizer->randomize($context->bucketingIdentity()) * 100;
 
         // Ensure we have an integer greater than 0.
         $n = max(1, ceil($n));

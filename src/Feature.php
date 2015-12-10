@@ -60,7 +60,12 @@ class Feature
         self::$logger = $logger;
     }
 
-    public static function setFactory(FeatureFactory $factory)
+    /**
+     * Set the factory that will be used to create feature checks.
+     *
+     * @param Specification\Factory $factory The factory to use.
+     */
+    public static function setFactory(Specification\FeatureFactory $factory)
     {
         self::$factory = $factory;
     }
@@ -68,7 +73,7 @@ class Feature
     private static function factory()
     {
         if (is_null(self::$factory)) {
-            self::$factory = new FeatureFactory();
+            self::$factory = new Specification\FeatureFactory();
         }
 
         return self::$factory;
@@ -102,9 +107,7 @@ class Feature
             $feature = self::factory()->create($feature);
         }
 
-        $candidate = new Candidate($name, self::$context);
-
-        $enabled = $feature->isSatisfiedBy($candidate);
+        $enabled = $feature->isSatisfiedBy($name, self::$context);
         if ($enabled) {
             self::log($name, $enabled, get_class($feature));
             return true;
@@ -113,7 +116,8 @@ class Feature
         return false;
     }
 
-    protected static function log($feature, $status, $method) {
+    protected static function log($feature, $status, $method)
+    {
         if (self::$logger) {
             $status = ($status) ? 'enabled' : 'disabled';
             $user = self::$context->userIdentity();
