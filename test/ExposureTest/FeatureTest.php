@@ -127,7 +127,7 @@ class FeatureTest extends PHPUnit_Framework_Testcase
 
         $logger->expects($this->once())
             ->method('info')
-            ->with($this->equalTo("$feature $status by $method for $user $bucket."));
+            ->with($this->equalTo("$feature $status by Exposure\Specification\IsEnabledByUser for $user $bucket."));
 
         Exposure\Feature::defineFeatures(array($feature => array($method => array($user))));
         Exposure\Feature::setContext(new Exposure\Context($user, $bucket));

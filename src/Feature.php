@@ -9,7 +9,6 @@
 
 namespace Exposure;
 
-use AB2_Selector_HashRandomizer;
 use Exception;
 use Psr\Log;
 
@@ -28,6 +27,8 @@ class Feature
     private static $features = array();
 
     private static $logger;
+
+    private static $factory;
 
     /**
      * Define the features to consider.
@@ -60,6 +61,25 @@ class Feature
     }
 
     /**
+     * Set the factory that will be used to create feature checks.
+     *
+     * @param Specification\Factory $factory The factory to use.
+     */
+    public static function setFactory(Specification\FeatureFactory $factory)
+    {
+        self::$factory = $factory;
+    }
+
+    private static function factory()
+    {
+        if (is_null(self::$factory)) {
+            self::$factory = new Specification\FeatureFactory();
+        }
+
+        return self::$factory;
+    }
+
+    /**
      * Return whether the specified feature is enabled.
      *
      * @param string $name The name of the feature.
@@ -84,59 +104,20 @@ class Feature
         }
 
         if (is_array($feature)) {
-            // $config['feature'] = array(Feature::PERCENTAGE => 50);
-            if (array_key_exists(self::PERCENTAGE, $feature) && is_int($feature[self::PERCENTAGE])) {
-                $enabled = self::isEnabledByPercentage($name, $feature[self::PERCENTAGE]);
-                if ($enabled) {
-                    self::log($name, $enabled, self::PERCENTAGE);
-                    return true;
-                }
-            }
+            $feature = self::factory()->create($feature);
+        }
 
-            // $config['feature'] = array(Feature::USER => array(25, 26));
-            if (array_key_exists(self::USER, $feature) && is_array($feature[self::USER])) {
-                $enabled = self::isEnabledByUser($feature[self::USER]);
-                if ($enabled) {
-                    self::log($name, $enabled, self::USER);
-                    return true;
-                }
-            }
+        $enabled = $feature->isSatisfiedBy($name, self::$context);
+        if ($enabled) {
+            self::log($name, $enabled, get_class($feature));
+            return true;
         }
 
         return false;
     }
 
-    protected static function isEnabledByPercentage($name, $percentage)
+    protected static function log($feature, $status, $method)
     {
-        if (is_null(self::$context->bucketingIdentity())) {
-            return false;
-        }
-
-        // Map a combination of the feature name and feature identity to
-        // an integer in the closed interval [1, 100].
-
-        // Prime the randomizer with the feature's name to ensure that a single
-        // user does not have every feature enabled or disabled at once.
-        $randomizer = new AB2_Selector_HashRandomizer($name);
-
-        $n = $randomizer->randomize(self::$context->bucketingIdentity()) * 100;
-
-        // Ensure we have an integer greater than 0.
-        $n = max(1, ceil($n));
-
-        return ($n <= $percentage);
-    }
-
-    protected static function isEnabledByUser(array $users)
-    {
-        if (is_null(self::$context->userIdentity())) {
-            return false;
-        }
-
-        return in_array(self::$context->userIdentity(), $users, true);
-    }
-
-    protected static function log($feature, $status, $method) {
         if (self::$logger) {
             $status = ($status) ? 'enabled' : 'disabled';
             $user = self::$context->userIdentity();
