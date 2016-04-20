@@ -19,20 +19,7 @@ if (Exposure\Feature::isEnabled('feature-name')) {
 Install the latest version with:
 
 ```bash
-$ composer require researchsquare/feature
-```
-
-This package isn't currently available in Packagist. Until that happens, you'll need to add the following to composer.json:
-
-```json
-{
-    "repositories": [
-        {
-            "type": "git",
-            "url": "git@github.com:researchsquare/feature.git"
-        }
-    ]
-}
+$ composer require researchsquare/exposure
 ```
 
 ## Integration
